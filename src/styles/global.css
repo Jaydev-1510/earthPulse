@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 :root {
   --bg-0: #030710;
   --bg-1: #060e1c;
@@ -60,6 +58,12 @@ body {
 }
 
 .globe-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+canvas[data-engine] {
+  display: block;
   width: 100% !important;
   height: 100% !important;
 }
