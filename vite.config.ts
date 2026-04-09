@@ -6,6 +6,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ["three", "r3f-globe"],
   },
+  resolve: {
+    dedupe: ["three"],
+  },
   build: {
     rollupOptions: {
       output: {
