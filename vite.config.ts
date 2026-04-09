@@ -4,7 +4,8 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ["three", "r3f-globe"],
+    include: ["r3f-globe"],
+    exclude: ["three"],
   },
   resolve: {
     dedupe: ["three"],

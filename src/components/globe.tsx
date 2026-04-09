@@ -328,7 +328,7 @@ export const Globe = memo(function Globe(props: GlobeProps) {
         background: "#040810",
       }}
       dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true }}
+      gl={{ antialias: true, failIfMajorPerformanceCaveat: false, }}
     >
       <GlobeScene {...props} />
       <OrbitControls
