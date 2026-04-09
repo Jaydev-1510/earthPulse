@@ -16,7 +16,8 @@ import { kpToOpacity, kpToColor } from "../data/noaa";
 // import earthTextureUrl from "../assets/earth-texture.jpg";
 import * as THREE from "three";
 
-const DAY_TEXTURE = "https://unpkg.com/three-globe@2.45.2/example/img/earth-blue-marble.jpg";
+const DAY_TEXTURE =
+  "https://unpkg.com/three-globe@2.45.2/example/img/earth-blue-marble.jpg";
 
 const AURORA_RINGS = [
   { lat: 66.5, lng: 0 },
@@ -326,7 +327,8 @@ export const Globe = memo(function Globe(props: GlobeProps) {
         inset: 0,
         background: "#040810",
       }}
-      gl={{ antialias: true, preserveDrawingBuffer: true }}
+      dpr={[1, 1.5]}
+      gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true }}
     >
       <GlobeScene {...props} />
       <OrbitControls
