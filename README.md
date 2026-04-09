@@ -2,7 +2,7 @@
 
 Earth Pulse is a 3D Earth dashboard which shows up the recent earth events like earthquakes, volcanoes, aurora, and also shows the live location of ISS!
 
-**[earthPulse](https://vercel.app)** · Built with React + Three.JS
+**[earthPulse](https://earthpulse-two.vercel.app)** · Built with React + Three.JS
 
 > Live earth activities in your browser!
 
@@ -12,7 +12,7 @@ Earth Pulse is a 3D Earth dashboard which shows up the recent earth events like 
 
 ## What is this?
 
-Earth Pulse is a 3D interactive visualization of real-time globe activities like earthquakes, volcanoes, and aurora; also shows the live position of ISS
+Earth Pulse is a 3D interactive visualization of real-time globe activities like earthquakes, volcanoes, and aurora; also shows the live position of ISS.
 
 ---
 
