@@ -1,7 +1,5 @@
-import { useRef, useMemo, useCallback, useState, useEffect, memo } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import R3fGlobe, { type GlobeMethods } from "r3f-globe";
+import { useRef, useEffect, useMemo, useCallback } from "react";
+import GlobeGL from "react-globe.gl";
 import type {
   Earthquake,
   Volcano,
@@ -13,11 +11,11 @@ import type {
 import { magColor, magRadius } from "../data/usgs";
 import { volColor } from "../data/volcanoes";
 import { kpToOpacity, kpToColor } from "../data/noaa";
-// import earthTextureUrl from "../assets/earth-texture.jpg";
-import * as THREE from "three";
 
 const DAY_TEXTURE =
   "https://unpkg.com/three-globe@2.45.2/example/img/earth-blue-marble.jpg";
+const BUMP_TEXTURE =
+  "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/textures/planets/earth_normal_2048.jpg";
 
 const AURORA_RINGS = [
   { lat: 66.5, lng: 0 },
@@ -30,62 +28,7 @@ const AURORA_RINGS = [
   { lat: -66.5, lng: -90 },
 ];
 
-type PointBase = {
-  lat: number;
-  lng: number;
-  size: number;
-  color: string;
-};
-
-type EarthquakePoint = PointBase & {
-  kind: "earthquake";
-  data: Earthquake;
-};
-
-type VolcanoPoint = PointBase & {
-  kind: "volcano";
-  data: Volcano;
-};
-
-type ISSPoint = PointBase & {
-  kind: "iss";
-  data: ISSPosition;
-};
-
-type MapPoint = EarthquakePoint | VolcanoPoint | ISSPoint;
-
-type Ring = {
-  lat: number;
-  lng: number;
-  maxR: number;
-  propagationSpeed: number;
-  repeatPeriod: number;
-  color: ((t: number) => string) | (() => (t: number) => string);
-};
-
-function CameraController({
-  target,
-}: {
-  target: { lat: number; lng: number } | null;
-}) {
-  const { camera } = useThree();
-
-  useEffect(() => {
-    if (!target) return;
-    const phi = ((90 - target.lat) * Math.PI) / 180;
-    const theta = ((target.lng + 180) * Math.PI) / 180;
-    const r = 200;
-    const x = -r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.cos(phi);
-    const z = r * Math.sin(phi) * Math.sin(theta);
-    camera.position.set(x, y, z);
-    camera.lookAt(0, 0, 0);
-  }, [target, camera]);
-
-  return null;
-}
-
-interface GlobeSceneProps {
+interface GlobeProps {
   earthquakes: Earthquake[];
   volcanoes: Volcano[];
   iss: ISSPosition | null;
@@ -96,7 +39,7 @@ interface GlobeSceneProps {
   onEventClick: (event: FeedEvent) => void;
 }
 
-function GlobeScene({
+export function Globe({
   earthquakes,
   volcanoes,
   iss,
@@ -105,55 +48,61 @@ function GlobeScene({
   layers,
   flyTarget,
   onEventClick,
-}: GlobeSceneProps) {
-  const globeRef = useRef<GlobeMethods | undefined>(undefined);
-  const { size } = useThree();
-  const pointsData = useMemo(() => {
-    const pts: MapPoint[] = [];
+}: GlobeProps) {
+  const globeRef = useRef<any>(null);
 
+  useEffect(() => {
+    if (!flyTarget || !globeRef.current) return;
+    globeRef.current.pointOfView(
+      { lat: flyTarget.lat, lng: flyTarget.lng, altitude: 1.8 },
+      1000,
+    );
+  }, [flyTarget]);
+
+  const pointsData = useMemo(() => {
+    const pts: any[] = [];
     if (layers.earthquakes) {
-      earthquakes.forEach((eq) => {
+      earthquakes.forEach((eq) =>
         pts.push({
           lat: eq.lat,
           lng: eq.lng,
-          size: magRadius(eq.magnitude),
+          radius: magRadius(eq.magnitude),
           color: magColor(eq.magnitude),
+          altitude: 0.005,
           kind: "earthquake",
-          data: eq,
-        });
-      });
+          raw: eq,
+        }),
+      );
     }
-
     if (layers.volcanoes) {
-      volcanoes.forEach((v) => {
+      volcanoes.forEach((v) =>
         pts.push({
           lat: v.lat,
           lng: v.lng,
-          size: v.status === "erupting" ? 0.7 : 0.45,
+          radius: v.status === "erupting" ? 0.7 : 0.45,
           color: volColor(v.status),
+          altitude: 0.005,
           kind: "volcano",
-          data: v,
-        });
-      });
+          raw: v,
+        }),
+      );
     }
-
     if (layers.iss && iss) {
       pts.push({
         lat: iss.lat,
         lng: iss.lng,
-        size: 0.6,
-        color: "#ffffff",
+        radius: 0.55,
+        color: "#5dcaa5",
+        altitude: 0.025,
         kind: "iss",
-        data: iss,
+        raw: iss,
       });
     }
-
     return pts;
   }, [earthquakes, volcanoes, iss, layers]);
 
   const ringsData = useMemo(() => {
-    const rings: Ring[] = [];
-
+    const rings: any[] = [];
     if (layers.earthquakes) {
       earthquakes
         .filter((eq) => eq.magnitude >= 5.0)
@@ -164,17 +113,10 @@ function GlobeScene({
             maxR: eq.magnitude * 1.2,
             propagationSpeed: 1.5,
             repeatPeriod: 1200,
-            color: () => {
-              const c = magColor(eq.magnitude);
-              return (t: number) =>
-                `${c}${Math.round((1 - t) * 255)
-                  .toString(16)
-                  .padStart(2, "0")}`;
-            },
+            color: magColor(eq.magnitude),
           }),
         );
     }
-
     if (layers.aurora && aurora) {
       AURORA_RINGS.forEach((r) =>
         rings.push({
@@ -183,17 +125,10 @@ function GlobeScene({
           maxR: 18,
           propagationSpeed: 0.6,
           repeatPeriod: 2500,
-          color: (t: number) => {
-            const c = kpToColor(aurora.kpIndex);
-            const opacity = kpToOpacity(aurora.kpIndex) * (1 - t);
-            return `${c}${Math.round(opacity * 255)
-              .toString(16)
-              .padStart(2, "0")}`;
-          },
+          color: kpToColor(aurora.kpIndex),
         }),
       );
     }
-
     return rings;
   }, [earthquakes, aurora, layers]);
 
@@ -201,21 +136,17 @@ function GlobeScene({
     if (!layers.iss || issTrail.length < 2) return [];
     return [
       {
-        points: issTrail.map((p) => [p.lat, p.lng]),
-        color: ["#5dcaa5aa", "#5dcaa500"],
-        stroke: 0.3,
+        coords: issTrail.map((p) => [p.lat, p.lng]),
+        color: ["#5dcaa5cc", "#5dcaa500"],
       },
     ];
   }, [issTrail, layers.iss]);
 
-  const handleClick = useCallback(
-    (layer: string, d: object | undefined) => {
-      if (!d) return;
-
-      const point = d as MapPoint;
-
-      if (point.kind === "earthquake") {
-        const eq = point.data as Earthquake;
+  const handlePointClick = useCallback(
+    (point: any) => {
+      const d = point as any;
+      if (d.kind === "earthquake") {
+        const eq = d.raw as Earthquake;
         onEventClick({
           id: eq.id,
           kind: "earthquake",
@@ -227,8 +158,8 @@ function GlobeScene({
           color: magColor(eq.magnitude),
           magnitude: eq.magnitude,
         });
-      } else if (point.kind === "volcano") {
-        const v = point.data as Volcano;
+      } else if (d.kind === "volcano") {
+        const v = d.raw as Volcano;
         onEventClick({
           id: v.id,
           kind: "volcano",
@@ -239,8 +170,8 @@ function GlobeScene({
           time: Date.now(),
           color: volColor(v.status),
         });
-      } else if (point.kind === "iss") {
-        const i = point.data as ISSPosition;
+      } else if (d.kind === "iss") {
+        const i = d.raw as ISSPosition;
         onEventClick({
           id: "iss",
           kind: "iss",
@@ -257,89 +188,58 @@ function GlobeScene({
   );
 
   return (
-    <>
-      <CameraController target={flyTarget} />
-      <ambientLight intensity={1.2} />
-      <directionalLight position={[5, 3, 5]} intensity={0.8} />
-      <R3fGlobe
-        ref={globeRef}
-        rendererSize={new THREE.Vector2(size.width, size.height)}
-        globeImageUrl={DAY_TEXTURE}
-        showAtmosphere={true}
-        atmosphereColor="#3a88dd"
-        atmosphereAltitude={0.14}
-        showGraticules={true}
-        pointsData={pointsData}
-        pointLat="lat"
-        pointLng="lng"
-        pointColor="color"
-        pointRadius="size"
-        pointAltitude={0.005}
-        pointResolution={10}
-        pointsMerge={true}
-        pointsTransitionDuration={0}
-        ringsData={ringsData}
-        ringLat="lat"
-        ringLng="lng"
-        ringColor="color"
-        ringMaxRadius="maxR"
-        ringPropagationSpeed="propagationSpeed"
-        ringRepeatPeriod="repeatPeriod"
-        pathsData={pathsData}
-        pathPoints="points"
-        pathPointLat={(p: number[]) => p[0]}
-        pathPointLng={(p: number[]) => p[1]}
-        pathColor="color"
-        pathStroke="stroke"
-        pathDashLength={0.4}
-        pathDashGap={0.2}
-        pathDashAnimateTime={2000}
-        onClick={handleClick}
-      />
-    </>
+    <GlobeGL
+      ref={globeRef}
+      width={window.innerWidth - 300}
+      height={window.innerHeight}
+      globeImageUrl={DAY_TEXTURE}
+      bumpImageUrl={BUMP_TEXTURE}
+      backgroundImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png"
+      showAtmosphere={true}
+      atmosphereColor="#3a88dd"
+      atmosphereAltitude={0.14}
+      pointsData={pointsData}
+      pointLat="lat"
+      pointLng="lng"
+      pointColor="color"
+      pointRadius="radius"
+      pointAltitude="altitude"
+      pointResolution={10}
+      onPointClick={handlePointClick}
+      pointLabel={(d: any) => `
+        <div style="
+          background:rgba(4,10,24,.95);
+          border:0.5px solid rgba(100,180,255,.3);
+          border-radius:7px;padding:7px 11px;
+          font-size:11px;color:#9fc8f5;
+          font-family:monospace;line-height:1.6;
+          max-width:180px;
+        ">
+          <strong style="color:${d.color}">${d.kind}</strong><br/>
+          ${d.raw?.place || d.raw?.name || "ISS"}
+          ${d.raw?.magnitude ? `<br/>M${d.raw.magnitude.toFixed(1)}` : ""}
+        </div>
+      `}
+      ringsData={ringsData}
+      ringLat="lat"
+      ringLng="lng"
+      ringColor={(d: any) => (t: number) =>
+        `${d.color}${Math.round((1 - t) * 200)
+          .toString(16)
+          .padStart(2, "0")}`
+      }
+      ringMaxRadius="maxR"
+      ringPropagationSpeed="propagationSpeed"
+      ringRepeatPeriod="repeatPeriod"
+      pathsData={pathsData}
+      pathPoints="coords"
+      pathPointLat={(p: any) => p[0]}
+      pathPointLng={(p: any) => p[1]}
+      pathColor="color"
+      pathDashLength={0.4}
+      pathDashGap={0.2}
+      pathDashAnimateTime={3000}
+      pathStroke={0.4}
+    />
   );
 }
-
-type GlobeProps = GlobeSceneProps;
-
-export const Globe = memo(function Globe(props: GlobeProps) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMounted(true);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
-
-  return (
-    <Canvas
-      camera={{ position: [0, 0, 280], fov: 50, near: 0.1, far: 1000 }}
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "absolute",
-        inset: 0,
-        background: "#040810",
-      }}
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, failIfMajorPerformanceCaveat: false, }}
-    >
-      <GlobeScene {...props} />
-      <OrbitControls
-        enablePan={false}
-        minDistance={120}
-        maxDistance={500}
-        autoRotate={true}
-        autoRotateSpeed={0.4}
-        enableDamping={true}
-        dampingFactor={0.08}
-      />
-    </Canvas>
-  );
-});

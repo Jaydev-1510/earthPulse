@@ -17,6 +17,7 @@
     "r3f-globe": "^1.6.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-globe.gl": "^2.37.1",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {

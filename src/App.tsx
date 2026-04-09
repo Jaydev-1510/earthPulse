@@ -33,7 +33,7 @@ export function App() {
 
   const handleSelect = useCallback((ev: FeedEvent) => {
     setSelected(ev);
-    setFlyTarget({ lat: ev.lat, lng: ev.lng - 90 });
+    setFlyTarget({ lat: ev.lat, lng: ev.lng });
   }, []);
 
   const handleClose = useCallback(() => {
