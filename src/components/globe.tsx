@@ -13,10 +13,10 @@ import type {
 import { magColor, magRadius } from "../data/usgs";
 import { volColor } from "../data/volcanoes";
 import { kpToOpacity, kpToColor } from "../data/noaa";
-import earthTextureUrl from "../assets/earth-texture.jpg";
+// import earthTextureUrl from "../assets/earth-texture.jpg";
 import * as THREE from "three";
 
-const DAY_TEXTURE = earthTextureUrl;
+const DAY_TEXTURE = "https://unpkg.com/three-globe@2.45.2/example/img/earth-blue-marble.jpg";
 
 const AURORA_RINGS = [
   { lat: 66.5, lng: 0 },
