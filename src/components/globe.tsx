@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback, useEffect } from "react";
+import { useRef, useMemo, useCallback, useState, useEffect, memo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import R3fGlobe, { type GlobeMethods } from "r3f-globe";
@@ -301,12 +301,32 @@ function GlobeScene({
 
 type GlobeProps = GlobeSceneProps;
 
-export function Globe(props: GlobeProps) {
+export const Globe = memo(function Globe(props: GlobeProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <Canvas
       camera={{ position: [0, 0, 280], fov: 50, near: 0.1, far: 1000 }}
-      style={{ background: "#040810" }}
-      gl={{ antialias: true }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        inset: 0,
+        background: "#040810",
+      }}
+      gl={{ antialias: true, powerPreference: "high-performance" }}
     >
       <GlobeScene {...props} />
       <OrbitControls
@@ -320,4 +340,4 @@ export function Globe(props: GlobeProps) {
       />
     </Canvas>
   );
-}
+});
