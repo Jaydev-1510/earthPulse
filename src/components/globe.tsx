@@ -13,7 +13,7 @@ import type {
 import { magColor, magRadius } from "../data/usgs";
 import { volColor } from "../data/volcanoes";
 import { kpToOpacity, kpToColor } from "../data/noaa";
-import earthTextureUrl from "../assets/earth-texture.webp";
+import earthTextureUrl from "../assets/earth-texture.jpg";
 import * as THREE from "three";
 
 const DAY_TEXTURE = earthTextureUrl;
