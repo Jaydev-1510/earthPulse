@@ -13,10 +13,10 @@ import type {
 import { magColor, magRadius } from "../data/usgs";
 import { volColor } from "../data/volcanoes";
 import { kpToOpacity, kpToColor } from "../data/noaa";
-import earthTextureUrl from "../assets/earth-texture.webp";
+// import earthTextureUrl from "../assets/earth-texture.webp";
 import * as THREE from "three";
 
-const DAY_TEXTURE = earthTextureUrl;
+const DAY_TEXTURE = new URL('../assets/earth-texture.webp', import.meta.url).href;
 
 const AURORA_RINGS = [
   { lat: 66.5, lng: 0 },
