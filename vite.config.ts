@@ -10,6 +10,7 @@ export default defineConfig({
     dedupe: ["three"],
   },
   build: {
+    assetsInlineLimit: 3000000,
     rollupOptions: {
       output: {
         manualChunks(id) {
