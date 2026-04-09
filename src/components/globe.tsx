@@ -15,7 +15,7 @@ import { volColor } from "../data/volcanoes";
 import { kpToOpacity, kpToColor } from "../data/noaa";
 import * as THREE from "three";
 
-const DAY_TEXTURE = "https://earthpulse-two.vercel.app/texture.jpg";
+const DAY_TEXTURE = "./texture.webp";
 
 const AURORA_RINGS = [
   { lat: 66.5, lng: 0 },
