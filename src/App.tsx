@@ -44,7 +44,7 @@ export function App() {
     return (
       <div className="loading-screen">
         <div className="loading-logo">
-         🌎 Earth <span>Pulse</span>
+          🌎 Earth <span>Pulse</span>
         </div>
         <div className="loading-spinner" />
         <div className="loading-track">
@@ -56,8 +56,8 @@ export function App() {
   }
 
   return (
-    <div className="app grid grid-cols-[1fr_300px] grid-rows-[1fr_44px] w-screen h-dvh overflow-hidden">
-      <div className="row-start-1 col-start-1 relative overflow-hidden">
+    <div className="app">
+      <div className="globe-wrap">
         <Globe
           earthquakes={data.earthquakes}
           volcanoes={data.volcanoes}
